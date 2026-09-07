@@ -6,7 +6,7 @@ import { fontVariables } from "@/lib/fonts"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://primitives.chanhdai.com"),
+  metadataBase: new URL("https://react-primitives.chanhdai.com"),
   title: {
     default: "ncdai/react-primitives",
     template: "%s – ncdai/react-primitives",

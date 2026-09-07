@@ -23,7 +23,7 @@
   ],
   "author": "ncdai <dai@chanhdai.com>",
   "license": "MIT",
-  "homepage": "https://primitives.chanhdai.com",
+  "homepage": "https://react-primitives.chanhdai.com",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ncdai/react-primitives.git"

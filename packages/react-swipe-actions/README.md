@@ -8,7 +8,7 @@ Swipe a row in a list to reveal actions on the left or right.
 - Keyboard, `Escape` and click-outside dismissal.
 - Unstyled, with no CSS to import and no runtime dependencies.
 
-→ Live demo: https://primitives.chanhdai.com/swipe-actions
+→ Live demo: https://react-primitives.chanhdai.com/swipe-actions
 
 ## Install
 

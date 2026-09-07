@@ -61,7 +61,7 @@
   ],
   "author": "ncdai <dai@chanhdai.com>",
   "license": "MIT",
-  "homepage": "https://primitives.chanhdai.com/swipe-actions",
+  "homepage": "https://react-primitives.chanhdai.com/swipe-actions",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ncdai/react-primitives.git",

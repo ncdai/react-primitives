@@ -1,0 +1,47 @@
+{
+  "name": "react-primitives-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.5.3",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "check-types": "turbo run check-types",
+    "format:check": "turbo run format:check",
+    "format:write": "turbo run format:write",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build && changeset publish"
+  },
+  "keywords": [
+    "react",
+    "primitives",
+    "unstyled",
+    "headless"
+  ],
+  "author": "ncdai <dai@chanhdai.com>",
+  "license": "MIT",
+  "homepage": "https://primitives.chanhdai.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ncdai/react-primitives.git"
+  },
+  "funding": "https://github.com/sponsors/ncdai",
+  "bugs": {
+    "url": "https://github.com/ncdai/react-primitives/issues"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@types/react-dom": "^19.2.7",
+    "prettier": "3.5.3",
+    "react-dom": "^19.2.8",
+    "turbo": "^2.9.18",
+    "typescript": "^5.8.3"
+  },
+  "resolutions": {
+    "@types/react": "19.2.14"
+  }
+}

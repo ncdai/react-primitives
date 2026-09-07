@@ -1,0 +1,95 @@
+{
+  "name": "@ncdai/react-swipe-actions",
+  "version": "0.0.0",
+  "description": "Unstyled swipe actions for React. Swipe a row in a list to reveal actions on the left or right.",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    }
+  },
+  "tsup": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "format": [
+      "esm",
+      "cjs"
+    ],
+    "bundle": true,
+    "clean": true,
+    "dts": true,
+    "outDir": "./dist"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup --minify",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format:check": "prettier --check \"**/*.{ts,tsx}\" --cache",
+    "format:write": "prettier --write \"**/*.{ts,tsx}\" --cache"
+  },
+  "keywords": [
+    "react",
+    "swipe actions",
+    "swipe",
+    "swipe to reveal",
+    "swipe to delete",
+    "swipeable",
+    "list item",
+    "gesture",
+    "unstyled",
+    "headless"
+  ],
+  "author": "ncdai <dai@chanhdai.com>",
+  "license": "MIT",
+  "homepage": "https://primitives.chanhdai.com/swipe-actions",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ncdai/react-primitives.git",
+    "directory": "packages/react-swipe-actions"
+  },
+  "funding": "https://github.com/sponsors/ncdai",
+  "bugs": {
+    "url": "https://github.com/ncdai/react-primitives/issues"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.27.0",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "eslint": "^9",
+    "eslint-config-prettier": "10.1.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "eslint-plugin-turbo": "^2.5.3",
+    "globals": "16.1.0",
+    "motion": "^12.39.0",
+    "react": "^19.0.0",
+    "tsup": "8.5.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "8.32.1"
+  },
+  "peerDependencies": {
+    "motion": ">=12",
+    "react": "^18.0.0 || ^19.0.0"
+  }
+}

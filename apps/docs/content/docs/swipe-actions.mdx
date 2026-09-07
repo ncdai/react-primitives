@@ -1,0 +1,114 @@
+---
+title: Swipe Actions
+description: Swipe a row in a list to reveal actions on the left or right.
+---
+
+Drag with a mouse or a finger, or focus a row and press the arrow keys.
+
+<SwipeActionsDemo />
+
+## Installation
+
+The package ships behaviour only, with no CSS to import and no runtime
+dependencies.
+
+```bash
+npm i @ncdai/react-swipe-actions
+```
+
+`react` and `motion` are peer dependencies.
+
+## The styled component
+
+Copy this into `components/ui/swipe-actions.tsx` and you get the demo above. It
+wraps the three parts that need styling and passes the other two straight
+through. Needs Tailwind and a `cn` helper.
+
+<include lang="tsx">
+  ../../src/components/ui/swipe-actions/swipe-actions.tsx
+</include>
+
+## Usage
+
+The demo above, in full.
+
+<include lang="tsx">../../src/components/swipe-actions-demo.tsx</include>
+
+## API reference
+
+| Part           | Renders      | Role                      |
+| -------------- | ------------ | ------------------------- |
+| `SwipeRoot`    | `div`        | Holds the list. Optional  |
+| `SwipeItem`    | `div`        | One row. Owns the gesture |
+| `SwipeActions` | `div`        | An edge strip             |
+| `SwipeAction`  | `button`     | One action                |
+| `SwipeContent` | `motion.div` | The draggable layer       |
+
+`SwipeActions`, `SwipeAction` and `SwipeContent` must live inside a `SwipeItem`.
+Every part forwards `ref`, passes unknown props through and carries a
+`data-slot`. Every part except `SwipeContent` also takes a `render` prop, so a
+row can be an `li`, a `motion.li`, or anything else.
+
+Style against the data attributes below rather than tracking state yourself.
+
+### SwipeRoot
+
+Makes rows close one another, so only one stays open at a time. It renders
+nothing else, so a lone `SwipeItem` works without it.
+
+### SwipeItem
+
+One row, and the element the gesture is bound to.
+
+| Prop             | Type                          | Default | Description                                                                             |
+| ---------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `threshold`      | `number`                      | `0.5`   | Fraction of the strip the drag must cross to snap open                                  |
+| `velocityFactor` | `number`                      | `0.2`   | Seconds of release velocity added to the position, so a flick opens without a full drag |
+| `disabled`       | `boolean`                     | `false` | Turns the gesture off                                                                   |
+| `closeOnScroll`  | `boolean`                     | `false` | Close the row on any scroll on the page                                                 |
+| `onOpenChange`   | `(state: SwipeState) => void` |         | Called with `closed`, `left` or `right`                                                 |
+
+| Attribute       | Value                     |
+| --------------- | ------------------------- |
+| `data-state`    | `closed`, `left`, `right` |
+| `data-disabled` | Present when disabled     |
+| `data-dragging` | Present while dragging    |
+
+### SwipeActions
+
+An edge strip. Its measured width is how far the row opens, so an action with no
+width never appears.
+
+| Prop   | Type                | Description                            |
+| ------ | ------------------- | -------------------------------------- |
+| `side` | `"left" \| "right"` | Which edge the strip sits on. Required |
+
+| Attribute   | Value           |
+| ----------- | --------------- |
+| `data-side` | `left`, `right` |
+
+### SwipeAction
+
+One action inside a strip. Renders a `button` with `type="button"`.
+
+| Prop           | Type      | Default | Description                                  |
+| -------------- | --------- | ------- | -------------------------------------------- |
+| `closeOnClick` | `boolean` | `true`  | Close the row once the click handler has run |
+
+### SwipeContent
+
+The layer that moves under the finger. Give it an opaque background: it is what
+hides the strips while the row is closed. Takes `motion.div` props, so it has no
+`render` prop.
+
+| Attribute       | Value                  |
+| --------------- | ---------------------- |
+| `data-dragging` | Present while dragging |
+
+## Accessibility
+
+- Closed strips are `inert`, so their buttons stay out of the tab order, the
+  accessibility tree and hit testing.
+- With focus inside a row, `ArrowLeft` and `ArrowRight` move it one step in
+  that direction and `Escape` closes it.
+- Under `prefers-reduced-motion` the row snaps into place instead of animating.

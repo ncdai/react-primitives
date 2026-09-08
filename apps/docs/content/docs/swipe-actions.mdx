@@ -60,13 +60,14 @@ nothing else, so a lone `SwipeItem` works without it.
 
 One row, and the element the gesture is bound to.
 
-| Prop             | Type                          | Default | Description                                                                             |
-| ---------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------- |
-| `threshold`      | `number`                      | `0.5`   | Fraction of the strip the drag must cross to snap open                                  |
-| `velocityFactor` | `number`                      | `0.2`   | Seconds of release velocity added to the position, so a flick opens without a full drag |
-| `disabled`       | `boolean`                     | `false` | Turns the gesture off                                                                   |
-| `closeOnScroll`  | `boolean`                     | `false` | Close the row on any scroll on the page                                                 |
-| `onOpenChange`   | `(state: SwipeState) => void` |         | Called with `closed`, `left` or `right`                                                 |
+| Prop                 | Type                          | Default | Description                                                                             |
+| -------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `threshold`          | `number`                      | `0.5`   | Fraction of the strip the drag must cross to snap open                                  |
+| `velocityFactor`     | `number`                      | `0.2`   | Seconds of release velocity added to the position, so a flick opens without a full drag |
+| `disabled`           | `boolean`                     | `false` | Turns the gesture off                                                                   |
+| `closeOnScroll`      | `boolean`                     | `false` | Close the row on any scroll on the page                                                 |
+| `onOpenChange`       | `(state: SwipeState) => void` |         | Called with `closed`, `left` or `right`                                                 |
+| `fullSwipeThreshold` | `number`                      | `0.5`   | Fraction of the row width the drag must cross to arm the side's `fullSwipe` action      |
 
 | Attribute       | Value                     |
 | --------------- | ------------------------- |
@@ -83,17 +84,29 @@ width never appears.
 | ------ | ------------------- | -------------------------------------- |
 | `side` | `"left" \| "right"` | Which edge the strip sits on. Required |
 
-| Attribute   | Value           |
-| ----------- | --------------- |
-| `data-side` | `left`, `right` |
+| Attribute    | Value                                 |
+| ------------ | ------------------------------------- |
+| `data-side`  | `left`, `right`                       |
+| `data-armed` | Present while the full swipe is armed |
 
 ### SwipeAction
 
 One action inside a strip. Renders a `button` with `type="button"`.
 
-| Prop           | Type      | Default | Description                                  |
-| -------------- | --------- | ------- | -------------------------------------------- |
-| `closeOnClick` | `boolean` | `true`  | Close the row once the click handler has run |
+| Prop           | Type      | Default | Description                                                                     |
+| -------------- | --------- | ------- | ------------------------------------------------------------------------------- |
+| `closeOnClick` | `boolean` | `true`  | Close the row once the click handler has run                                    |
+| `fullSwipe`    | `boolean` | `false` | Run this action when the row is dragged past `fullSwipeThreshold`. One per side |
+
+| Attribute    | Value                              |
+| ------------ | ---------------------------------- |
+| `data-armed` | Present while this action is armed |
+
+A full swipe dispatches a real click on the action, so one `onClick` serves
+both the tap and the gesture. Past its natural width the strip grows to stay
+flush with the content edge. Arming collapses the other actions in the strip and
+grows the `fullSwipe` one into the space they give up, so the takeover reads as
+one movement.
 
 ### SwipeContent
 

@@ -16,21 +16,21 @@ export function SwipeActionsDemo() {
   const [mails, setMails] = useState(INITIAL_MAILS)
   const shouldReduceMotion = useReducedMotion()
 
-  const removeMail = (id: string) =>
+  const removeMail = (id: string) => {
     setMails((prev) => prev.filter((mail) => mail.id !== id))
+  }
 
-  const toggleFlag = (id: string) =>
+  const toggleFlag = (id: string) => {
     setMails((prev) =>
       prev.map((mail) =>
         mail.id === id ? { ...mail, flagged: !mail.flagged } : mail
       )
     )
+  }
 
   return (
-    <div className="not-prose relative overflow-clip rounded-md">
-      <div className="pointer-events-none absolute inset-0 z-1 rounded-md inset-ring-1 inset-ring-foreground/10" />
-
-      <SwipeRoot render={<ul role="list" />}>
+    <div className="not-prose overflow-clip rounded-xl border">
+      <SwipeRoot render={<ul role="list" className="divide-y" />}>
         <AnimatePresence initial={false}>
           {mails.map((mail) => (
             <SwipeItem
@@ -53,7 +53,8 @@ export function SwipeActionsDemo() {
             >
               <SwipeActions side="left">
                 <SwipeAction
-                  className="bg-sky-500 text-white"
+                  fullSwipe
+                  className="rounded-lg bg-sky-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >
                   <ArchiveIcon />
@@ -63,7 +64,7 @@ export function SwipeActionsDemo() {
 
               <SwipeActions side="right">
                 <SwipeAction
-                  className="bg-green-500 text-white"
+                  className="rounded-lg bg-green-500 text-white"
                   onClick={() => toggleFlag(mail.id)}
                 >
                   <FlagIcon />
@@ -71,7 +72,8 @@ export function SwipeActionsDemo() {
                 </SwipeAction>
 
                 <SwipeAction
-                  className="bg-destructive text-white"
+                  fullSwipe
+                  className="rounded-lg bg-red-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >
                   <Trash2Icon />
@@ -82,7 +84,7 @@ export function SwipeActionsDemo() {
               <SwipeContent>
                 <button
                   type="button"
-                  className="flex w-full flex-col items-start gap-1 px-4 pt-3 pb-4 text-left"
+                  className="flex w-full flex-col items-start gap-1 p-4 pt-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-foreground"
                 >
                   <span className="flex items-center gap-1.5 font-semibold">
                     {mail.sender}

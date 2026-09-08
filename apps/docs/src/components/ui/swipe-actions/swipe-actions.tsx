@@ -10,7 +10,17 @@ const SwipeRoot = SwipeActionsPrimitive.SwipeRoot
 
 const SwipeItem = SwipeActionsPrimitive.SwipeItem
 
-const SwipeActions = SwipeActionsPrimitive.SwipeActions
+function SwipeActions({
+  className,
+  ...props
+}: ComponentProps<typeof SwipeActionsPrimitive.SwipeActions>) {
+  return (
+    <SwipeActionsPrimitive.SwipeActions
+      className={cn("gap-1 p-1", className)}
+      {...props}
+    />
+  )
+}
 
 function SwipeAction({
   className,
@@ -19,12 +29,7 @@ function SwipeAction({
   return (
     <SwipeActionsPrimitive.SwipeAction
       className={cn(
-        "flex min-w-20 cursor-pointer flex-col items-center justify-center gap-1.5 px-4",
-        "text-xs leading-tight whitespace-nowrap select-none",
-        "bg-secondary text-secondary-foreground",
-        "transition-[filter] hover:brightness-110 active:brightness-90",
-        "focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-current",
-        "[-webkit-tap-highlight-color:transparent] [&_svg]:size-5",
+        "flex min-w-20 flex-col items-center justify-center gap-1.5 bg-secondary px-4 text-xs font-medium whitespace-nowrap text-secondary-foreground select-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5",
         className
       )}
       {...props}

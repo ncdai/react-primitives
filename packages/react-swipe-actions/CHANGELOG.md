@@ -1,5 +1,14 @@
 # @ncdai/react-swipe-actions
 
+## 0.1.1
+
+### Patch Changes
+
+- d4cf5e5: Clip the item with `overflow: clip` instead of `overflow: hidden`, so a row is
+  never a scroll container. With `hidden`, an open row had scrollable overflow that
+  focus or `scrollIntoView` could scroll to, leaving the row stuck at an offset with
+  no scrollbar to get back.
+
 ## 0.1.0
 
 ### Minor Changes

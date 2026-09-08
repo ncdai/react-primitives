@@ -84,7 +84,7 @@ export function SwipeActionsDemo() {
               <SwipeContent>
                 <button
                   type="button"
-                  className="flex w-full flex-col items-start gap-1 p-4 pt-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-foreground"
+                  className="flex w-full flex-col items-start gap-1 rounded-xl p-4 pt-3 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-foreground"
                 >
                   <span className="flex items-center gap-1.5 font-semibold">
                     {mail.sender}

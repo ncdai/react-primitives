@@ -14,5 +14,5 @@ export default defineConfig([
       "@typescript-eslint/no-import-type-side-effects": "error",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", ".source/**", "out/**", "build/**", "next-env.d.ts"]),
 ])

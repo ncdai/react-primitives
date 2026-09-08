@@ -13,7 +13,7 @@ Swipe a row in a list to reveal actions on the left or right.
 ## Install
 
 ```bash
-npm i @ncdai/react-swipe-actions
+npm i @ncdai/react-swipe-actions motion
 ```
 
 `react` and `motion` are peer dependencies.

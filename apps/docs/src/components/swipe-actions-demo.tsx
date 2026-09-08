@@ -53,7 +53,7 @@ export function SwipeActionsDemo() {
             >
               <SwipeActions side="left">
                 <SwipeAction
-                  className="bg-info text-white"
+                  className="bg-sky-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >
                   <ArchiveIcon />
@@ -63,7 +63,7 @@ export function SwipeActionsDemo() {
 
               <SwipeActions side="right">
                 <SwipeAction
-                  className="bg-success text-white"
+                  className="bg-green-500 text-white"
                   onClick={() => toggleFlag(mail.id)}
                 >
                   <FlagIcon />
@@ -87,7 +87,7 @@ export function SwipeActionsDemo() {
                   <span className="flex items-center gap-1.5 font-semibold">
                     {mail.sender}
                     {mail.flagged && (
-                      <FlagIcon className="size-3.5 text-success" />
+                      <FlagIcon className="size-3.5 text-green-500" />
                     )}
                   </span>
                   <span className="text-sm">{mail.subject}</span>

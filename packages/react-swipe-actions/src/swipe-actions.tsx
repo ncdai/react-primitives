@@ -26,7 +26,7 @@ export type SwipeState = "closed" | SwipeSide
 const ITEM_STYLE: React.CSSProperties = {
   position: "relative",
   isolation: "isolate",
-  overflow: "hidden",
+  overflow: "clip",
 }
 
 const ACTIONS_STYLE: React.CSSProperties = {

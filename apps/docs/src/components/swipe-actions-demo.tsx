@@ -53,7 +53,7 @@ export function SwipeActionsDemo() {
             >
               <SwipeActions side="left" fullSwipe>
                 <SwipeAction
-                  className="rounded-lg bg-sky-500 text-white"
+                  className="rounded-xl bg-sky-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >
                   <ArchiveIcon />
@@ -63,7 +63,7 @@ export function SwipeActionsDemo() {
 
               <SwipeActions side="right" fullSwipe>
                 <SwipeAction
-                  className="rounded-lg bg-green-500 text-white"
+                  className="rounded-xl bg-green-500 text-white"
                   onClick={() => toggleFlag(mail.id)}
                 >
                   <FlagIcon />
@@ -71,7 +71,7 @@ export function SwipeActionsDemo() {
                 </SwipeAction>
 
                 <SwipeAction
-                  className="rounded-lg bg-red-500 text-white"
+                  className="rounded-xl bg-red-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >
                   <Trash2Icon />

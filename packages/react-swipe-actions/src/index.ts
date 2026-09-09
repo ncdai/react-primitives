@@ -2,6 +2,8 @@
 
 export {
   SwipeAction,
+  SwipeActionContent,
+  type SwipeActionContentProps,
   type SwipeActionProps,
   SwipeActions,
   type SwipeActionsProps,

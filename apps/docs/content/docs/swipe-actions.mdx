@@ -36,15 +36,17 @@ The demo above, in full.
 
 ## API reference
 
-| Part           | Renders      | Role                      |
-| -------------- | ------------ | ------------------------- |
-| `SwipeRoot`    | `div`        | Holds the list. Optional  |
-| `SwipeItem`    | `div`        | One row. Owns the gesture |
-| `SwipeActions` | `div`        | An edge strip             |
-| `SwipeAction`  | `button`     | One action                |
-| `SwipeContent` | `motion.div` | The draggable layer       |
+| Part                 | Renders      | Role                           |
+| -------------------- | ------------ | ------------------------------ |
+| `SwipeRoot`          | `div`        | Holds the list. Optional       |
+| `SwipeItem`          | `div`        | One row. Owns the gesture      |
+| `SwipeActions`       | `div`        | An edge strip                  |
+| `SwipeAction`        | `button`     | One action                     |
+| `SwipeActionContent` | `span`       | The visible slice of an action |
+| `SwipeContent`       | `motion.div` | The draggable layer            |
 
-`SwipeActions`, `SwipeAction` and `SwipeContent` must live inside a `SwipeItem`.
+`SwipeActions` and `SwipeContent` must live inside a `SwipeItem`, `SwipeAction`
+inside a `SwipeActions`, and `SwipeActionContent` inside a `SwipeAction`.
 Every part forwards `ref`, passes unknown props through and carries a
 `data-slot`. Every part except `SwipeContent` also takes a `render` prop, so a
 row can be an `li`, a `motion.li`, or anything else.
@@ -67,7 +69,7 @@ One row, and the element the gesture is bound to.
 | `disabled`           | `boolean`                     | `false` | Turns the gesture off                                                                   |
 | `closeOnScroll`      | `boolean`                     | `false` | Close the row on any scroll on the page                                                 |
 | `onOpenChange`       | `(state: SwipeState) => void` |         | Called with `closed`, `left` or `right`                                                 |
-| `fullSwipeThreshold` | `number`                      | `0.5`   | Fraction of the row width the drag must cross to arm the side's `fullSwipe` action      |
+| `fullSwipeThreshold` | `number`                      | `0.5`   | Fraction of the row width the drag must cross to arm a `fullSwipe` strip                |
 
 | Attribute       | Value                     |
 | --------------- | ------------------------- |
@@ -80,9 +82,10 @@ One row, and the element the gesture is bound to.
 An edge strip. Its measured width is how far the row opens, so an action with no
 width never appears.
 
-| Prop   | Type                | Description                            |
-| ------ | ------------------- | -------------------------------------- |
-| `side` | `"left" \| "right"` | Which edge the strip sits on. Required |
+| Prop        | Type      | Default  | Description                                        |                                        |
+| ----------- | --------- | -------- | -------------------------------------------------- | -------------------------------------- |
+| `side`      | `"left" \ | "right"` |                                                    | Which edge the strip sits on. Required |
+| `fullSwipe` | `boolean` | `false`  | Let a drag across the row run the outermost action |                                        |
 
 | Attribute    | Value                                 |
 | ------------ | ------------------------------------- |
@@ -91,22 +94,27 @@ width never appears.
 
 ### SwipeAction
 
-One action inside a strip. Renders a `button` with `type="button"`.
+One action inside a strip. Renders a `button` with `type="button"` that covers
+the whole row, and shows only the slice its `SwipeActionContent` occupies. Paint
+belongs here; layout belongs on the content.
 
-| Prop           | Type      | Default | Description                                                                     |
-| -------------- | --------- | ------- | ------------------------------------------------------------------------------- |
-| `closeOnClick` | `boolean` | `true`  | Close the row once the click handler has run                                    |
-| `fullSwipe`    | `boolean` | `false` | Run this action when the row is dragged past `fullSwipeThreshold`. One per side |
+| Prop           | Type      | Default | Description                                  |
+| -------------- | --------- | ------- | -------------------------------------------- |
+| `closeOnClick` | `boolean` | `true`  | Close the row once the click handler has run |
 
 | Attribute    | Value                              |
 | ------------ | ---------------------------------- |
 | `data-armed` | Present while this action is armed |
 
-A full swipe dispatches a real click on the action, so one `onClick` serves
-both the tap and the gesture. Past its natural width the strip grows to stay
-flush with the content edge. Arming collapses the other actions in the strip and
-grows the `fullSwipe` one into the space they give up, so the takeover reads as
-one movement.
+A full swipe runs the **outermost** action of the strip, as it does on iOS. The
+takeover is that action covering the others, which only the outermost one can
+do. It dispatches a real click, so one `onClick` serves both the tap and the
+gesture.
+
+### SwipeActionContent
+
+The visible slice of an action. Its width is what decides how far the row opens,
+so give it one.
 
 ### SwipeContent
 

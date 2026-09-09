@@ -30,12 +30,31 @@ const ITEM_STYLE: React.CSSProperties = {
   overflow: "clip",
 }
 
+/* The strip parks just outside the item and slides in with the content. */
 const ACTIONS_STYLE: React.CSSProperties = {
   position: "absolute",
   top: 0,
   bottom: 0,
+  width: "100%",
   zIndex: 0,
+}
+
+/**
+ * An action covers the whole item and shows only the slice its content occupies,
+ * because the actions are stacked and each one paints over the one before it.
+ * A full swipe then only has to slide them together: nothing resizes.
+ */
+const PANEL_STYLE: React.CSSProperties = {
+  position: "absolute",
+  inset: 0,
   display: "flex",
+  // Only the content is a target; the rest of the action is just paint.
+  pointerEvents: "none",
+}
+
+const ACTION_CONTENT_STYLE: React.CSSProperties = {
+  display: "flex",
+  pointerEvents: "auto",
 }
 
 const CONTENT_STYLE: React.CSSProperties = {
@@ -110,13 +129,15 @@ type SwipeItemContextValue = {
   disabled: boolean
   dragging: boolean
   x: MotionValue<number>
+  /** Drives the full-swipe takeover: 1 keeps the strip spread, 0 stacks it. */
+  collapse: MotionValue<number>
   leftWidth: number
   rightWidth: number
   itemWidth: number
   /** Side whose full-swipe action fires on release. */
   armed: SwipeSide | null
   fullSwipeSides: Record<SwipeSide, boolean>
-  /** Reported by each action strip, so the item knows where to snap. */
+  /** Summed from the action contents, so the item knows where to snap. */
   setStripWidth: (side: SwipeSide, width: number) => void
   registerFullSwipe: (side: SwipeSide, run: () => void) => () => void
   close: () => void
@@ -128,14 +149,37 @@ type SwipeItemContextValue = {
 
 const SwipeItemContext = React.createContext<SwipeItemContextValue | null>(null)
 
-const SwipeActionsContext = React.createContext<SwipeSide | null>(null)
+type SwipeActionsContextValue = {
+  side: SwipeSide
+  fullSwipe: boolean
+  /** Registration order is mount order, which is DOM order. */
+  measure: (id: string, width: number) => void
+  forget: (id: string) => void
+  /** How far into the strip this action's content starts. */
+  offsetOf: (id: string) => number
+  /** The outermost action, the one a full swipe runs. */
+  isOutermost: (id: string) => boolean
+}
 
-function useSwipeSide() {
-  const side = React.useContext(SwipeActionsContext)
-  if (!side) {
+const SwipeActionsContext =
+  React.createContext<SwipeActionsContextValue | null>(null)
+
+const SwipeActionContext = React.createContext<string | null>(null)
+
+function useSwipeActionId() {
+  const id = React.useContext(SwipeActionContext)
+  if (!id) {
+    throw new Error("SwipeActionContent must be used within SwipeAction")
+  }
+  return id
+}
+
+function useSwipeActions() {
+  const context = React.useContext(SwipeActionsContext)
+  if (!context) {
     throw new Error("SwipeAction must be used within SwipeActions")
   }
-  return side
+  return context
 }
 
 function useSwipeItem() {
@@ -212,6 +256,7 @@ export function SwipeItem({
   const stateRef = React.useRef<SwipeState>("closed")
   const draggedRef = React.useRef(false)
   const x = useMotionValue(0)
+  const collapse = useMotionValue(1)
 
   const setStripWidth = React.useCallback((side: SwipeSide, width: number) => {
     setWidths((prev) =>
@@ -237,6 +282,16 @@ export function SwipeItem({
     armedRef.current = next
     setArmed(next)
   }, [])
+
+  // animate() retargets from the current value, so crossing the threshold back
+  // and forth stays continuous.
+  React.useEffect(() => {
+    animate(
+      collapse,
+      armed ? 0 : 1,
+      shouldReduceMotion ? { duration: 0 } : TAKEOVER_TWEEN
+    )
+  }, [armed, collapse, shouldReduceMotion])
 
   // ResizeObserver reports the initial size as soon as it starts observing.
   React.useEffect(() => {
@@ -415,6 +470,7 @@ export function SwipeItem({
       disabled,
       dragging,
       x,
+      collapse,
       leftWidth: widths.left,
       rightWidth: widths.right,
       itemWidth,
@@ -433,6 +489,7 @@ export function SwipeItem({
       disabled,
       dragging,
       x,
+      collapse,
       widths,
       itemWidth,
       armed,
@@ -471,62 +528,81 @@ export function SwipeItem({
 
 export type SwipeActionsProps = UseRenderComponentProps<"div"> & {
   side: SwipeSide
+  /**
+   * Let a drag past `fullSwipeThreshold` run the outermost action, the way Mail
+   * does on iOS. The takeover works by that action covering the others, so it
+   * is always the outermost one, as it is on the platform.
+   * @defaultValue false
+   */
+  fullSwipe?: boolean
 }
 
-export function SwipeActions({ render, side, ...props }: SwipeActionsProps) {
-  const {
-    state,
-    armed,
-    x,
-    leftWidth,
-    rightWidth,
-    fullSwipeSides,
-    setStripWidth,
-  } = useSwipeItem()
+export function SwipeActions({
+  render,
+  side,
+  fullSwipe = false,
+  ...props
+}: SwipeActionsProps) {
+  const { state, armed, x, setStripWidth } = useSwipeItem()
   const ref = React.useRef<HTMLDivElement>(null)
 
-  const fullSwipe = fullSwipeSides[side]
-  const natural = side === "left" ? leftWidth : rightWidth
+  // Content widths in mount order, which is the order they sit in the strip.
+  const [contents, setContents] = React.useState<
+    { id: string; width: number }[]
+  >([])
+
+  const measure = React.useCallback((id: string, width: number) => {
+    setContents((prev) => {
+      const at = prev.findIndex((content) => content.id === id)
+      if (at === -1) return [...prev, { id, width }]
+      if (prev[at].width === width) return prev
+      const next = [...prev]
+      next[at] = { id, width }
+      return next
+    })
+  }, [])
+
+  const forget = React.useCallback((id: string) => {
+    setContents((prev) => prev.filter((content) => content.id !== id))
+  }, [])
+
+  const offsetOf = React.useCallback(
+    (id: string) => {
+      let offset = 0
+      for (const content of contents) {
+        if (content.id === id) break
+        offset += content.width
+      }
+      return offset
+    },
+    [contents]
+  )
+
+  const total = contents.reduce((sum, content) => sum + content.width, 0)
 
   React.useEffect(() => {
-    const element = ref.current
-    if (!element) return
+    setStripWidth(side, total)
+    return () => setStripWidth(side, 0)
+  }, [side, total, setStripWidth])
 
-    // ResizeObserver reports the initial size as soon as it starts observing.
-    const observer = new ResizeObserver(() => {
-      // Ignore the widths written below, so `natural` stays the natural one.
-      if (element.style.width) return
-      setStripWidth(side, element.offsetWidth)
-    })
-    observer.observe(element)
-
-    return () => {
-      observer.disconnect()
-      setStripWidth(side, 0)
-    }
-  }, [side, setStripWidth])
-
+  // The strip is parked just outside the item, so tracking the content edge is
+  // the whole of its movement.
   useMotionValueEvent(x, "change", (value) => {
     const element = ref.current
     if (!element) return
-
-    const travel = side === "left" ? value : -value
-
-    // A strip only ever belongs to its own direction. Without this the far
-    // strip reappears once the drag uncovers the corner of the row it sits in.
-    const visibility = travel > 0 ? "" : "hidden"
-    if (element.style.visibility !== visibility) {
-      element.style.visibility = visibility
-    }
-
-    // Grow past the natural width so the strip keeps up with the content edge.
-    // Width is a layout property, so only write it when the value really moves.
-    if (!fullSwipe) return
-    const width = travel > natural ? `${Math.round(travel)}px` : ""
-    if (element.style.width !== width) {
-      element.style.width = width
-    }
+    element.style.transform = `translate3d(${Math.round(value)}px, 0, 0)`
   })
+
+  const isOutermost = React.useCallback(
+    (id: string) =>
+      contents.length > 0 && contents[contents.length - 1].id === id,
+    [contents]
+  )
+
+  const context = React.useMemo<SwipeActionsContextValue>(
+    () => ({ side, fullSwipe, measure, forget, offsetOf, isOutermost }),
+    [side, fullSwipe, measure, forget, offsetOf, isOutermost]
+  )
 
   const element = useRender({
     defaultTagName: "div",
@@ -537,7 +613,10 @@ export function SwipeActions({ render, side, ...props }: SwipeActionsProps) {
         "data-side": side,
         "data-armed": armed === side ? "" : undefined,
         ref,
-        style: { ...ACTIONS_STYLE, [side]: 0 },
+        style: {
+          ...ACTIONS_STYLE,
+          [side === "left" ? "right" : "left"]: "100%",
+        },
         // Closed, the strip sits under the content: keep it out of the
         // accessibility tree, the tab order and hit testing.
         inert: state !== side,
@@ -547,7 +626,7 @@ export function SwipeActions({ render, side, ...props }: SwipeActionsProps) {
   })
 
   return (
-    <SwipeActionsContext.Provider value={side}>
+    <SwipeActionsContext.Provider value={context}>
       {element}
     </SwipeActionsContext.Provider>
   )
@@ -559,28 +638,30 @@ export type SwipeActionProps = UseRenderComponentProps<"button"> & {
    * @defaultValue true
    */
   closeOnClick?: boolean
-  /**
-   * Run this action when the item is dragged past `fullSwipeThreshold`, the way
-   * Mail does on iOS. One action per side; it takes over the strip once armed.
-   * @defaultValue false
-   */
-  fullSwipe?: boolean
 }
 
 export function SwipeAction({
   render,
   closeOnClick = true,
-  fullSwipe = false,
   ...props
 }: SwipeActionProps) {
-  const { close, armed, registerFullSwipe } = useSwipeItem()
-  const side = useSwipeSide()
-  const shouldReduceMotion = useReducedMotion()
+  const {
+    close,
+    armed,
+    x,
+    collapse,
+    leftWidth,
+    rightWidth,
+    registerFullSwipe,
+  } = useSwipeItem()
+  const { side, fullSwipe, offsetOf, isOutermost } = useSwipeActions()
+  const id = React.useId()
   const ref = React.useRef<HTMLButtonElement>(null)
-  const naturalWidth = React.useRef(0)
+
+  const primary = fullSwipe && isOutermost(id)
 
   React.useEffect(() => {
-    if (!fullSwipe) return
+    if (!primary) return
 
     // Dispatching a real click keeps one path to the handler, so a full swipe
     // and a tap are the same event to the consumer.
@@ -589,68 +670,92 @@ export function SwipeAction({
         new MouseEvent("click", { bubbles: true, cancelable: true })
       )
     })
-  }, [fullSwipe, side, registerFullSwipe])
+  }, [primary, side, registerFullSwipe])
 
-  const isArmed = armed === side
-  const collapsed = isArmed && !fullSwipe
+  const before = offsetOf(id)
 
-  // Width has to be measured: it cannot tween from auto.
-  React.useEffect(() => {
+  // Transform only, so a drag never costs a reflow.
+  const place = React.useCallback(() => {
     const element = ref.current
-    if (!element || fullSwipe) return
+    if (!element) return
 
-    if (collapsed) {
-      // Continue from where it is, so re-arming mid-restore does not snap back
-      // out to full width first.
-      const from = element.offsetWidth
-      if (!element.style.width) naturalWidth.current = from
+    const total = side === "left" ? leftWidth : rightWidth
+    const travel = Math.max(0, side === "left" ? x.get() : -x.get())
+    const spread = collapse.get()
 
-      element.style.boxSizing = "border-box"
-      element.style.overflow = "clip"
-      element.style.minWidth = "0"
-      // border-box still floors the box at its own padding.
-      element.style.paddingInline = "0"
+    // Past the natural width the contents stay put and the outermost action's
+    // panel fills the rest, which is what makes a full swipe read as a flood.
+    const progress = total > 0 ? Math.min(1, travel / total) : 0
+    const offset = before * progress * spread * (side === "left" ? -1 : 1)
 
-      const controls = animate(
-        element,
-        { width: [from, 0] },
-        shouldReduceMotion ? { duration: 0 } : TAKEOVER_TWEEN
-      )
-      return () => controls.stop()
-    }
+    element.style.transform = `translate3d(${offset.toFixed(2)}px, 0, 0)`
+  }, [before, side, leftWidth, rightWidth, x, collapse])
 
-    if (naturalWidth.current === 0) return
+  useMotionValueEvent(x, "change", place)
+  useMotionValueEvent(collapse, "change", place)
+  React.useEffect(place, [place])
 
-    const controls = animate(
-      element,
-      { width: [element.offsetWidth, naturalWidth.current] },
-      shouldReduceMotion ? { duration: 0 } : TAKEOVER_TWEEN
-    )
-    controls.then(() => {
-      element.style.width = ""
-      element.style.boxSizing = ""
-      element.style.overflow = ""
-      element.style.minWidth = ""
-      element.style.paddingInline = ""
-    })
-
-    return () => controls.stop()
-  }, [collapsed, fullSwipe, shouldReduceMotion])
-
-  return useRender({
+  const element = useRender({
     defaultTagName: "button",
     render,
     props: mergeProps<"button">(
       {
         "data-slot": "swipe-action",
-        "data-armed": isArmed && fullSwipe ? "" : undefined,
+        "data-armed": armed === side && primary ? "" : undefined,
         ref,
         type: "button",
-        style: fullSwipe ? { flexGrow: 1 } : undefined,
+        style: {
+          ...PANEL_STYLE,
+          justifyContent: side === "left" ? "flex-end" : "flex-start",
+        },
         onClick: () => {
           if (closeOnClick) close()
         },
       },
+      props
+    ),
+  })
+
+  return (
+    <SwipeActionContext.Provider value={id}>
+      {element}
+    </SwipeActionContext.Provider>
+  )
+}
+
+export type SwipeActionContentProps = UseRenderComponentProps<"span">
+
+/**
+ * The visible slice of an action. Its width is what the item measures, so the
+ * action it sits in can cover the row without changing how far the row opens.
+ */
+export function SwipeActionContent({
+  render,
+  ...props
+}: SwipeActionContentProps) {
+  const { measure, forget } = useSwipeActions()
+  const id = useSwipeActionId()
+  const ref = React.useRef<HTMLSpanElement>(null)
+
+  React.useEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    // ResizeObserver reports the initial size as soon as it starts observing.
+    const observer = new ResizeObserver(() => measure(id, element.offsetWidth))
+    observer.observe(element)
+
+    return () => {
+      observer.disconnect()
+      forget(id)
+    }
+  }, [id, measure, forget])
+
+  return useRender({
+    defaultTagName: "span",
+    render,
+    props: mergeProps<"span">(
+      { "data-slot": "swipe-action-content", ref, style: ACTION_CONTENT_STYLE },
       props
     ),
   })

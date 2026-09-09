@@ -51,9 +51,8 @@ export function SwipeActionsDemo() {
                 />
               }
             >
-              <SwipeActions side="left">
+              <SwipeActions side="left" fullSwipe>
                 <SwipeAction
-                  fullSwipe
                   className="rounded-lg bg-sky-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >
@@ -62,7 +61,7 @@ export function SwipeActionsDemo() {
                 </SwipeAction>
               </SwipeActions>
 
-              <SwipeActions side="right">
+              <SwipeActions side="right" fullSwipe>
                 <SwipeAction
                   className="rounded-lg bg-green-500 text-white"
                   onClick={() => toggleFlag(mail.id)}
@@ -72,7 +71,6 @@ export function SwipeActionsDemo() {
                 </SwipeAction>
 
                 <SwipeAction
-                  fullSwipe
                   className="rounded-lg bg-red-500 text-white"
                   onClick={() => removeMail(mail.id)}
                 >

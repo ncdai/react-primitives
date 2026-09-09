@@ -5,6 +5,7 @@ Swipe a row in a list to reveal actions on the left or right.
 - Composable parts, no config props.
 - Polymorphic `render` prop, so a row can be any element you want.
 - Only one row open at a time.
+- Full swipe runs the outermost action, the way Mail does on iOS.
 - Keyboard, `Escape` and click-outside dismissal.
 - Unstyled, with no CSS to import and no runtime dependencies.
 
@@ -16,102 +17,102 @@ Swipe a row in a list to reveal actions on the left or right.
 npm i @ncdai/react-swipe-actions motion
 ```
 
-`react` and `motion` are peer dependencies.
-
 ## Usage
 
+Paste this in and swipe the row. Classes are Tailwind; every part takes `style`
+too.
+
 ```tsx
+"use client"
+
 import {
   SwipeAction,
+  SwipeActionContent,
   SwipeActions,
   SwipeContent,
   SwipeItem,
   SwipeRoot,
 } from "@ncdai/react-swipe-actions"
 
-function Inbox({ mails }: { mails: Mail[] }) {
+export function Example() {
   return (
-    <SwipeRoot render={<ul />}>
-      {mails.map((mail) => (
-        <SwipeItem key={mail.id} render={<li />}>
-          <SwipeActions side="left">
-            <SwipeAction onClick={() => archive(mail.id)}>Archive</SwipeAction>
-          </SwipeActions>
+    <SwipeRoot className="max-w-md overflow-clip rounded-xl border border-neutral-200 dark:border-neutral-800">
+      <SwipeItem>
+        <SwipeActions side="right" fullSwipe>
+          <SwipeAction
+            className="bg-amber-500 text-sm text-white"
+            onClick={() => alert("Flagged")}
+          >
+            <SwipeActionContent className="w-20 items-center justify-center">
+              Flag
+            </SwipeActionContent>
+          </SwipeAction>
 
-          <SwipeActions side="right">
-            <SwipeAction onClick={() => remove(mail.id)}>Delete</SwipeAction>
-          </SwipeActions>
+          <SwipeAction
+            className="bg-red-600 text-sm text-white"
+            onClick={() => alert("Deleted")}
+          >
+            <SwipeActionContent className="w-20 items-center justify-center">
+              Delete
+            </SwipeActionContent>
+          </SwipeAction>
+        </SwipeActions>
 
-          <SwipeContent>{mail.subject}</SwipeContent>
-        </SwipeItem>
-      ))}
+        <SwipeContent className="bg-white p-4 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-50">
+          Namespaced registries
+        </SwipeContent>
+      </SwipeItem>
     </SwipeRoot>
   )
 }
 ```
 
-`SwipeRoot` is optional. It only makes sibling rows close one another, so a
-lone `SwipeItem` works on its own.
+`SwipeRoot` is optional, it only makes sibling rows close one another. An item
+takes one `SwipeActions` per side, and `render` swaps any part's element, so a
+list is `<SwipeRoot render={<ul />}>` around `<SwipeItem render={<li />}>`.
 
 ## Styling
 
-The package positions the strips behind the content and makes the content
-draggable. Everything else is yours. Two things it cannot do for you:
+Everything is yours to style, with three rules:
 
-- **Give `SwipeContent` an opaque background.** It is what hides the strips
-  while the row is closed.
-- **Give `SwipeAction` a width.** The strip is measured to decide how far the
-  row opens, so zero-width actions never appear.
-
-Enough to get a usable row, with Tailwind:
-
-```tsx
-<SwipeRoot render={<ul />} className="divide-y border-y">
-  <SwipeItem render={<li />}>
-    <SwipeActions side="right">
-      <SwipeAction
-        className="w-20 bg-red-600 text-sm text-white"
-        onClick={() => remove(mail.id)}
-      >
-        Delete
-      </SwipeAction>
-    </SwipeActions>
-
-    <SwipeContent className="bg-white p-4 dark:bg-zinc-950">
-      {mail.subject}
-    </SwipeContent>
-  </SwipeItem>
-</SwipeRoot>
-```
+- **Paint on `SwipeAction`, layout on `SwipeActionContent`.** The action covers
+  the whole row, the content is the slice you see. That is what lets a full
+  swipe flood it.
+- **`SwipeContent` needs an opaque background.** It hides the actions while the
+  row is closed.
+- **`SwipeActionContent` needs a width.** It is measured to decide how far the
+  row opens, so a zero-width one never shows.
 
 ## Parts
 
-| Part           | Renders      | `render` prop |
-| -------------- | ------------ | ------------- |
-| `SwipeRoot`    | `div`        | yes           |
-| `SwipeItem`    | `div`        | yes           |
-| `SwipeActions` | `div`        | yes           |
-| `SwipeAction`  | `button`     | yes           |
-| `SwipeContent` | `motion.div` | no            |
+| Part                 | Renders      | `render` prop |
+| -------------------- | ------------ | ------------- |
+| `SwipeRoot`          | `div`        | yes           |
+| `SwipeItem`          | `div`        | yes           |
+| `SwipeActions`       | `div`        | yes           |
+| `SwipeAction`        | `button`     | yes           |
+| `SwipeActionContent` | `span`       | yes           |
+| `SwipeContent`       | `motion.div` | no            |
 
-`SwipeActions`, `SwipeAction` and `SwipeContent` must live inside a
-`SwipeItem`. Every part forwards `ref` and passes unknown props through.
+Every part forwards `ref` and passes unknown props through.
 
 ### SwipeItem
 
-| Prop             | Default | Description                                                                             |
-| ---------------- | ------- | --------------------------------------------------------------------------------------- |
-| `threshold`      | `0.5`   | Fraction of the strip the drag must cross to snap open                                  |
-| `velocityFactor` | `0.2`   | Seconds of release velocity added to the position, so a flick opens without a full drag |
-| `disabled`       | `false` | Turns the gesture off                                                                   |
-| `closeOnScroll`  | `false` | Close on any scroll on the page                                                         |
-| `onOpenChange`   |         | Called with `"closed"`, `"left"` or `"right"`                                           |
+| Prop                 | Default | Description                                                                             |
+| -------------------- | ------- | --------------------------------------------------------------------------------------- |
+| `threshold`          | `0.5`   | Fraction of the strip the drag must cross to snap open                                  |
+| `velocityFactor`     | `0.2`   | Seconds of release velocity added to the position, so a flick opens without a full drag |
+| `disabled`           | `false` | Turns the gesture off                                                                   |
+| `closeOnScroll`      | `false` | Close on any scroll on the page                                                         |
+| `fullSwipeThreshold` | `0.5`   | Fraction of the row width the drag must cross to arm a `fullSwipe` strip                |
+| `onOpenChange`       |         | Called with `"closed"`, `"left"` or `"right"`                                           |
 
 ### SwipeActions
 
-| Prop   | Description                     |
-| ------ | ------------------------------- |
-| `side` | `"left"` or `"right"`. Required |
+| Prop        | Default | Description                                                     |
+| ----------- | ------- | --------------------------------------------------------------- |
+| `side`      |         | `"left"` or `"right"`. Required                                 |
+| `fullSwipe` | `false` | Let a drag across the row run the outermost action of the strip |
 
 ### SwipeAction
 
@@ -123,21 +124,22 @@ Enough to get a usable row, with Tailwind:
 
 Style against these rather than tracking state yourself.
 
-| Attribute       | On                          | Value                                          |
-| --------------- | --------------------------- | ---------------------------------------------- |
-| `data-state`    | `SwipeItem`                 | `closed`, `left`, `right`                      |
-| `data-disabled` | `SwipeItem`                 | present when disabled                          |
-| `data-dragging` | `SwipeItem`, `SwipeContent` | present while dragging                         |
-| `data-side`     | `SwipeActions`              | `left`, `right`                                |
-| `data-slot`     | every part                  | `swipe-root`, `swipe-item`, `swipe-actions`, … |
+| Attribute       | On                            | Value                                          |
+| --------------- | ----------------------------- | ---------------------------------------------- |
+| `data-state`    | `SwipeItem`                   | `closed`, `left`, `right`                      |
+| `data-disabled` | `SwipeItem`                   | present when disabled                          |
+| `data-dragging` | `SwipeItem`, `SwipeContent`   | present while dragging                         |
+| `data-side`     | `SwipeActions`                | `left`, `right`                                |
+| `data-armed`    | `SwipeActions`, `SwipeAction` | present while a full swipe is armed            |
+| `data-slot`     | every part                    | `swipe-root`, `swipe-item`, `swipe-actions`, … |
 
 ## Accessibility
 
-- Closed strips are `inert`, so their buttons stay out of the tab order, the
-  accessibility tree and hit testing.
+- Closed actions are `inert`: out of the tab order, the accessibility tree and
+  hit testing. Only the content is a hit target, never the rest of the action.
 - With focus inside a row, `ArrowLeft` and `ArrowRight` move it one step in that
-  direction and `Escape` closes it. Focusable row content is what carries focus
-  there.
+  direction and `Escape` closes it. The row needs focusable content to receive
+  focus.
 - Under `prefers-reduced-motion` the row snaps into place instead of animating.
 
 ## License

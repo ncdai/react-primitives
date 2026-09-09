@@ -1,6 +1,6 @@
 {
   "name": "@ncdai/react-swipe-actions",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Unstyled swipe actions for React. Swipe a row in a list to reveal actions on the left or right.",
   "publishConfig": {
     "access": "public",
